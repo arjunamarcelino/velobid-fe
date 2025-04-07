@@ -2,6 +2,7 @@
   "name": "next-app-template",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -14,6 +15,7 @@
     "@heroui/card": "^2.2.15",
     "@heroui/code": "2.2.12",
     "@heroui/dropdown": "^2.3.16",
+    "@heroui/image": "^2.2.10",
     "@heroui/input": "2.4.16",
     "@heroui/kbd": "2.2.12",
     "@heroui/link": "2.2.13",
@@ -25,6 +27,7 @@
     "@heroui/system": "2.4.12",
     "@heroui/tabs": "^2.2.13",
     "@heroui/theme": "2.4.12",
+    "@rainbow-me/rainbowkit": "^2.2.4",
     "@react-aria/ssr": "3.9.7",
     "@react-aria/visually-hidden": "3.8.20",
     "clsx": "2.1.1",

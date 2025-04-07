@@ -1,10 +1,15 @@
-import { Button } from '@heroui/button';
-import { Image } from '@heroui/image';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { Button } from "@heroui/button";
+import { Image } from "@heroui/image";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const buttonBaseStyles = "rounded-full hover:rounded-full";
 
-const ChainIcon = ({ iconUrl, name, background, size = 20 }: {
+const ChainIcon = ({
+  iconUrl,
+  name,
+  background,
+  size = 20,
+}: {
   iconUrl?: string;
   name?: string;
   background?: string;
@@ -16,13 +21,13 @@ const ChainIcon = ({ iconUrl, name, background, size = 20 }: {
       width: size,
       height: size,
       borderRadius: 999,
-      overflow: 'hidden',
+      overflow: "hidden",
       marginRight: 4,
     }}
   >
     {iconUrl && (
       <Image
-        alt={`${name ?? 'Chain'} icon`}
+        alt={`${name ?? "Chain"} icon`}
         src={iconUrl}
         style={{ width: size, height: size }}
       />
@@ -30,10 +35,14 @@ const ChainIcon = ({ iconUrl, name, background, size = 20 }: {
   </div>
 );
 
-const CustomButton = ({ children, onClick, variant = 'flat' }: {
+const CustomButton = ({
+  children,
+  onClick,
+  variant = "flat",
+}: {
   children: React.ReactNode;
   onClick?: () => void;
-  variant?: 'flat' | 'ghost';
+  variant?: "flat" | "ghost";
 }) => (
   <div className="w-fit flex">
     <Button
@@ -67,8 +76,8 @@ export const ConnectButtonWalletComponents = () => {
               aria-hidden="true"
               style={{
                 opacity: 0,
-                pointerEvents: 'none',
-                userSelect: 'none',
+                pointerEvents: "none",
+                userSelect: "none",
               }}
             />
           );
@@ -86,9 +95,7 @@ export const ConnectButtonWalletComponents = () => {
 
         if (chain?.unsupported) {
           return (
-            <CustomButton onClick={openChainModal}>
-              Wrong network
-            </CustomButton>
+            <CustomButton onClick={openChainModal}>Wrong network</CustomButton>
           );
         }
 

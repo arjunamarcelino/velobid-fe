@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { ethers, formatEther, parseEther } from "ethers"
+import { formatEther, parseEther } from "ethers"
 
 import { Button } from "@heroui/button"
-import { Card, CardHeader, CardBody, CardFooter } from "@heroui/card"
+import { Card, CardHeader, CardBody } from "@heroui/card"
 import { Tabs, Tab } from "@heroui/tabs"
 import CreateAuctionModal from "@/components/create-auction-modal"
-import { getContract, getProvider } from "@/contract/contract"
-import abi from "@/contract/abi";
+import { getContract } from "@/contract/contract"
 import toast from "react-hot-toast"
 
 type Auction = {
@@ -43,12 +42,17 @@ export default function Dashboard() {
     const newTheme = theme === "light" ? "dark" : "light"
     setTheme(newTheme)
     document.documentElement.classList.toggle("dark")
+    localStorage.setItem("theme", newTheme)
   }
 
   // Ensure dark mode is applied on initial render
-  useState(() => {
-    document.documentElement.classList.add("dark")
-  })
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme")
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark")
+      setTheme("dark")
+    }
+  }, [])
 
   const [overview, setOverview] = useState({
     activeAuctions: 0,
