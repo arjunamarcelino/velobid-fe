@@ -39,6 +39,7 @@ import {
   DiscordIcon,
   SearchIcon,
 } from "@/components/icons";
+import { getContract, getSigner } from "@/contract/contract";
 
 
 export const Navbar = () => {
@@ -59,6 +60,18 @@ export const Navbar = () => {
       if (accounts.length > 0) {
         setAccount(accounts[0]);
         const chainId = await window.ethereum.request({ method: "eth_chainId" });
+        const contract = await getContract();
+        const signer = await getSigner();
+        const address = await signer.getAddress();
+        const user = await contract.users(address);
+
+        if (!user.registered) {
+          console.log("User not registered. Registering...");
+          await contract.registerUser();
+          await contract.owner();
+        } else {
+          console.log("User already registered.");
+        }
 
         console.log("Connected to chain:", chainId);
       } else {

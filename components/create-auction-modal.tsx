@@ -116,6 +116,7 @@ export default function CreateAuctionModal({ trigger }: CreateAuctionModalProps)
                 await checkNetwork();
 
                 const contract = await getContract();
+
                 const { name, description, duration, startingBid } = formData;
 
                 const durationInSeconds = parseInt(duration) * 60;
@@ -140,6 +141,10 @@ export default function CreateAuctionModal({ trigger }: CreateAuctionModalProps)
                   setSubmitted(formData);
                   setFormData({ name: "", description: "", duration: "", startingBid: "" });
                   onClose();
+
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 500);
                 } else {
                   toast.error("Auction creation failed.");
                   throw new Error("Transaction failed");

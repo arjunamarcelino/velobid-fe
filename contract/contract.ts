@@ -12,9 +12,6 @@ export const getSigner = async () => {
   const provider = getProvider();
   const signer = await provider.getSigner();
 
-  const address = await signer.getAddress();
-  console.log("Connected address:", address);
-
   return signer;
 };
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import { formatEther, parseEther } from "ethers"
+import { formatEther, parseEther, parseUnits } from "ethers"
 
 import { Button } from "@heroui/button"
 import { Card, CardHeader, CardBody } from "@heroui/card"
@@ -10,6 +10,7 @@ import { Tabs, Tab } from "@heroui/tabs"
 import CreateAuctionModal from "@/components/create-auction-modal"
 import { getContract } from "@/contract/contract"
 import toast from "react-hot-toast"
+import { Input } from "@heroui/input"
 
 type Auction = {
   auctionId: string;
@@ -35,6 +36,11 @@ function getTimeLeft(endTime: string | number) {
   return `${hours}h ${minutes}m`;
 }
 
+function shortenAddress(address: string, chars = 4) {
+  if (!address) return "";
+  return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
+};
+
 export default function Dashboard() {
   const [theme, setTheme] = useState<"light" | "dark">("dark")
 
@@ -42,17 +48,12 @@ export default function Dashboard() {
     const newTheme = theme === "light" ? "dark" : "light"
     setTheme(newTheme)
     document.documentElement.classList.toggle("dark")
-    localStorage.setItem("theme", newTheme)
   }
 
   // Ensure dark mode is applied on initial render
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme")
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark")
-      setTheme("dark")
-    }
-  }, [])
+  useState(() => {
+    document.documentElement.classList.add("dark")
+  })
 
   const [overview, setOverview] = useState({
     activeAuctions: 0,
@@ -79,7 +80,8 @@ export default function Dashboard() {
         totalUsers: result.totalUsers.toString(),
       };
 
-      // 🟢 Update overview state based on the platformStats
+      console.log(platformStats)
+
       setOverview({
         activeAuctions: Number(platformStats.totalActiveAuction),
         upcoming: Number(platformStats.totalAuction) - Number(platformStats.totalActiveAuction),
@@ -111,7 +113,15 @@ export default function Dashboard() {
 
         const auctionDetails = await Promise.all(
           auctionIds.map(async (id: any) => {
-            const auction = await contract.auctions(id)
+            const cleanId = BigInt(id.toString().split('.')[0])
+            const auction = await contract.auctions(cleanId)
+
+            const auctionEndTime = parseInt(auction.auctionEndTime.toString(), 10)
+            const now = Math.floor(Date.now() / 1000)
+
+            if (auctionEndTime < now && !auction.ended) {
+              await contract.auctionEnd(auction.auctionId)
+            }
 
             return {
               auctionId: auction.auctionId.toString(),
@@ -129,20 +139,37 @@ export default function Dashboard() {
           })
         )
 
+        auctionDetails.sort((a, b) => {
+          if (!a.ended && b.ended) return -1;
+          if (a.ended && !b.ended) return 1;
+
+          if (!a.ended && !b.ended) {
+            return parseInt(a.auctionEndTime) - parseInt(b.auctionEndTime)
+          }
+
+          return parseInt(b.auctionEndTime) - parseInt(a.auctionEndTime)
+        })
+
+        console.log(auctionDetails);
+
         setAuctions(auctionDetails)
       } catch (err) {
         console.error("Error fetching auctions:", err)
       }
-    }
-    else {
-      console.log("No auctions yet.");
+    } else {
+      console.log("No auctions yet.")
     }
   }
 
   useEffect(() => {
-    fetchAuctions()
-    console.log(auctions);
-  }, [])
+    fetchAuctions();
+
+    const interval = setInterval(() => {
+      fetchAuctions();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [overview]);
 
   return (
     <div className={`min-h-screen w-full bg-background`}>
@@ -173,11 +200,11 @@ export default function Dashboard() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <p className="text-sm text-foreground-500">Active Auctions</p>
-                      <p className="text-2xl font-bold">{overview.activeAuctions}</p>
+                      <p className="text-2xl font-bold">{overview.auction - auctions.filter(a => a.ended).length}</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm text-foreground-500">Upcoming</p>
-                      <p className="text-2xl font-bold">{overview.upcoming}</p>
+                      <p className="text-sm text-foreground-500">Past Auctions</p>
+                      <p className="text-2xl font-bold">{auctions.filter(a => a.ended).length}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-foreground-500">Total Bids</p>
@@ -238,10 +265,11 @@ export default function Dashboard() {
                           image="/NeonGenesis.jpg?height=400&width=400"
                           name={auction.auctionName}
                           creator={auction.beneficiary}
-                          price={`${formatEther(auction.highestBid)} ETH`}
+                          price={`${auction.highestBid === "0.0" ? auction.startingBid : auction.highestBid} ETH`}
                           timeLeft={getTimeLeft(auction.auctionEndTime)}
                           bidCount={Number(auction.totalVolumeBid)}
                           id={auction.auctionId}
+                          winner={auction.winner}
                         />
                       ))
                     ) : (
@@ -251,20 +279,21 @@ export default function Dashboard() {
                 </Tab>
                 <Tab key="active" title="Active">
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {auctions.filter(a => !a.ended).length > 0 ? (
+                    {auctions.filter(a => getTimeLeft(a.auctionEndTime) !== "Ended").length > 0 ? (
                       auctions
-                        .filter(a => !a.ended)
+                        .filter(a => getTimeLeft(a.auctionEndTime) !== "Ended")
                         .map((auction) => (
                           <CollectionCard
                             key={auction.auctionId.toString()}
-                            image={`/default-auction.jpg?height=400&width=400`}
+                            image="/NeonGenesis.jpg?height=400&width=400"
                             name={auction.auctionName}
                             creator={auction.beneficiary}
-                            price={`${formatEther(auction.highestBid)} ETH`}
+                            price={`${auction.highestBid === "0.0" ? auction.startingBid : auction.highestBid} ETH`}
                             timeLeft={getTimeLeft(auction.auctionEndTime)}
                             bidCount={Number(auction.totalVolumeBid)}
                             featured={false}
                             id={auction.auctionId}
+                            winner={auction.winner}
                           />
                         ))
                     ) : (
@@ -273,22 +302,24 @@ export default function Dashboard() {
                   </div>
                 </Tab>
 
+
                 <Tab key="past" title="Past">
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {auctions.filter(a => a.ended).length > 0 ? (
+                    {auctions.filter(a => getTimeLeft(a.auctionEndTime) === "Ended").length > 0 ? (
                       auctions
-                        .filter(a => a.ended)
+                        .filter(a => getTimeLeft(a.auctionEndTime) === "Ended")
                         .map((auction) => (
                           <CollectionCard
                             key={auction.auctionId.toString()}
-                            image={`/default-auction.jpg?height=400&width=400`}
+                            image="/NeonGenesis.jpg?height=400&width=400"
                             name={auction.auctionName}
                             creator={auction.beneficiary}
-                            price={`${formatEther(auction.highestBid)} ETH`}
+                            price={`${auction.highestBid === "0.0" ? auction.startingBid : auction.highestBid} ETH`}
                             timeLeft="Ended"
                             bidCount={Number(auction.totalVolumeBid)}
                             featured={false}
                             id={auction.auctionId}
+                            winner={auction.winner}
                           />
                         ))
                     ) : (
@@ -296,6 +327,7 @@ export default function Dashboard() {
                     )}
                   </div>
                 </Tab>
+
               </Tabs>
 
             </div>
@@ -316,6 +348,7 @@ interface CollectionCardProps {
   featured?: boolean
   upcoming?: boolean
   id?: string
+  winner?: string
 }
 
 function CollectionCard({
@@ -328,27 +361,46 @@ function CollectionCard({
   featured = false,
   upcoming = false,
   id = "",
+  winner,
 }: CollectionCardProps) {
+
+  const [bidAmount, setBidAmount] = useState("")
 
   const placeBid = async () => {
     try {
-      const contract = await getContract();
+      const priceValue = parseFloat(price.replace(" ETH", ""))
+      const bidValue = parseFloat(bidAmount)
 
-      const auctionId = BigInt(id);
-      const bidAmountEth = "1";
-      const bidAmountWei = parseEther(bidAmountEth);
+      if (isNaN(bidValue) || bidValue <= priceValue) {
+        toast.error(`Bid must be more than current price (${price})`)
+        return
+      }
 
-      const tx = await contract.bid(auctionId, bidAmountWei, {
-        value: bidAmountWei,
-      });
+      const contract = await getContract()
+      const auctionId = Number(id);
+      const bidAmountWei = parseUnits(bidAmount, "ether")
 
-      await tx.wait();
-      toast.success("Bid placed successfully!");
+      const tx = await contract.bid(auctionId, bidAmountWei, { value: bidAmountWei })
+
+      const receipt = await tx.wait();
+
+      if (receipt.status === 1) {
+        toast.success("Bid placed!");
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        toast.error("Failed to place bid.");
+        throw new Error("Failed to place bid.");
+      }
+
     } catch (err) {
-      console.error("Failed to place bid:", err);
-      toast.error("Failed to place bid.");
+      console.error("Failed to place bid:", err)
+      toast.error("Failed to place bid.")
     }
-  };
+  }
+
   return (
     <Card className={`overflow-hidden transition-all hover:shadow-lg ${featured ? "border-primary" : ""}`}>
       <div className="relative">
@@ -373,6 +425,7 @@ function CollectionCard({
           {timeLeft}
         </div>
       </div>
+
       <CardBody className="p-4">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -380,12 +433,34 @@ function CollectionCard({
             <p className="text-sm font-medium text-primary">{price}</p>
           </div>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <p>{creator}</p>
+            <p>{shortenAddress(creator)}</p>
             <p>{bidCount} bids</p>
           </div>
-          <Button variant="bordered" className="w-full" onPress={placeBid}>
-            {upcoming ? "Remind Me" : "Place Bid"}
-          </Button>
+
+          {timeLeft === "Ended" && winner && (
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <p>Winner</p>
+              <p>{shortenAddress(winner)}</p>
+            </div>
+          )}
+
+
+          {/* 👇 New Bid Input Section */}
+          {timeLeft !== "Ended" && (
+            <>
+              <Input
+                type="number"
+                min={parseFloat(price.replace(" ETH", ""))}
+                placeholder="Enter your bid (ETH)"
+                value={bidAmount}
+                onChange={(e) => setBidAmount(e.target.value)}
+              />
+
+              <Button variant="bordered" className="w-full" onPress={placeBid}>
+                {upcoming ? "Remind Me" : "Place Bid"}
+              </Button>
+            </>
+          )}
         </div>
       </CardBody>
     </Card>
