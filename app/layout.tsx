@@ -8,6 +8,7 @@ import { Providers } from "./providers";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
+import N8nChat from "@/components/chabot";
 
 export const metadata: Metadata = {
   title: {
@@ -58,6 +59,7 @@ export default function RootLayout({
                 <p className="text-primary">Educhain</p>
               </Link>
             </footer>
+            <N8nChat />
           </div>
         </Providers>
       </body>
