@@ -40,6 +40,7 @@ import {
   SearchIcon,
 } from "@/components/icons";
 import { getContract, getSigner } from "@/contract/contract";
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 
 export const Navbar = () => {
@@ -204,7 +205,7 @@ export const Navbar = () => {
           >
             Sponsor
           </Button> */}
-          {account ? (
+          {/* {account ? (
             <Dropdown>
               <DropdownTrigger>
                 <Button color="primary" variant="flat">
@@ -221,7 +222,8 @@ export const Navbar = () => {
             <Button onPress={connectWallet} color="primary">
               Connect Wallet
             </Button>
-          )}
+          )} */}
+          <ConnectButton />
           {/* <WalletComponents /> */}
         </NavbarItem>
       </NavbarContent>

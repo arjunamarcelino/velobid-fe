@@ -10,6 +10,9 @@ import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
 import N8nChat from "@/components/chatbot";
 
+import Provider from "./provider";
+import '@rainbow-me/rainbowkit/styles.css';
+
 export const metadata: Metadata = {
   title: {
     default: siteConfig.name,
@@ -42,26 +45,28 @@ export default function RootLayout({
           fontSans.variable,
         )}
       >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          <div className="relative flex flex-col h-screen">
-            <Navbar />
-            <main className="container mx-auto max-w-7xl px-6 flex-grow">
-              {children}
-            </main>
-            <footer className="w-full flex items-center justify-center py-3">
-              <Link
-                isExternal
-                className="flex items-center gap-1 text-current"
-                href="https://heroui.com?utm_source=next-app-template"
-                title="heroui.com homepage"
-              >
-                <span className="text-default-600">Built in</span>
-                <p className="text-primary">Educhain</p>
-              </Link>
-            </footer>
-            <N8nChat />
-          </div>
-        </Providers>
+        <Provider>
+          <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+            <div className="relative flex flex-col h-screen">
+              <Navbar />
+              <main className="container mx-auto max-w-7xl px-6 flex-grow">
+                {children}
+              </main>
+              <footer className="w-full flex items-center justify-center py-3">
+                <Link
+                  isExternal
+                  className="flex items-center gap-1 text-current"
+                  href="https://heroui.com?utm_source=next-app-template"
+                  title="heroui.com homepage"
+                >
+                  <span className="text-default-600">Built in</span>
+                  <p className="text-primary">Educhain</p>
+                </Link>
+              </footer>
+              <N8nChat />
+            </div>
+          </Providers>
+        </Provider>
       </body>
     </html>
   );
