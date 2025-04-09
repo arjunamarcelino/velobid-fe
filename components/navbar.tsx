@@ -15,13 +15,6 @@ import {
   NavbarItem,
   NavbarMenuItem,
 } from "@heroui/navbar";
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownItem,
-  DropdownMenu,
-} from "@heroui/dropdown";
-import { Button } from "@heroui/button";
 import { Kbd } from "@heroui/kbd";
 import { Link } from "@heroui/link";
 import { Input } from "@heroui/input";
@@ -39,90 +32,10 @@ import {
   DiscordIcon,
   SearchIcon,
 } from "@/components/icons";
-import { getContract, getSigner } from "@/contract/contract";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 
 export const Navbar = () => {
-  const [account, setAccount] = React.useState<string | null>(null);
-
-  const connectWallet = async () => {
-    try {
-      if (typeof window === "undefined" || !window.ethereum) {
-        alert("MetaMask is not installed.");
-
-        return;
-      }
-
-      const accounts: string[] = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-
-      if (accounts.length > 0) {
-        setAccount(accounts[0]);
-        const chainId = await window.ethereum.request({ method: "eth_chainId" });
-        const contract = await getContract();
-        const signer = await getSigner();
-        const address = await signer.getAddress();
-        const user = await contract.users(address);
-
-        if (!user.registered) {
-          console.log("User not registered. Registering...");
-          await contract.registerUser();
-          await contract.owner();
-        } else {
-          console.log("User already registered.");
-        }
-
-        console.log("Connected to chain:", chainId);
-      } else {
-        console.warn("No accounts found.");
-      }
-    } catch (error) {
-      console.error("Wallet connection error:", error);
-      alert("Failed to connect wallet. Check console for details.");
-    }
-  };
-
-  React.useEffect(() => {
-    const checkConnection = async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        try {
-          const accounts: string[] = await window.ethereum.request({
-            method: "eth_accounts", // Gets connected accounts without asking permission
-          });
-
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-          }
-        } catch (err) {
-          console.error("Failed to check wallet connection:", err);
-        }
-      }
-    };
-
-    checkConnection();
-  }, []);
-
-  React.useEffect(() => {
-    if (typeof window !== "undefined" && window.ethereum) {
-      const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length === 0) {
-          // User disconnected
-          setAccount(null);
-        } else {
-          setAccount(accounts[0]);
-        }
-      };
-
-      window.ethereum.on("accountsChanged", handleAccountsChanged);
-
-      return () => {
-        window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
-      };
-    }
-  }, []);
-
   const searchInput = (
     <Input
       aria-label="Search"

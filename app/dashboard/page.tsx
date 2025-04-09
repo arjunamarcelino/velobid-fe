@@ -11,6 +11,7 @@ import CreateAuctionModal from "@/components/create-auction-modal"
 import { getContract } from "@/contract/contract"
 import toast from "react-hot-toast"
 import { Input } from "@heroui/input"
+import { useAccount } from 'wagmi';
 
 type Auction = {
   auctionId: string;
@@ -58,6 +59,25 @@ export default function Dashboard() {
       setTheme("dark")
     }
   }, [])
+
+  const { address, isConnected } = useAccount();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      if (!isConnected || !address) return;
+
+      const contract = await getContract();
+      const user = await contract.users(address);
+
+      if (!user.registered) {
+        await contract.registerUser();
+      }
+      console.log('aaaa')
+    };
+
+    checkUser();
+  }, [isConnected, address]);
+
 
   const [overview, setOverview] = useState({
     activeAuctions: 0,
