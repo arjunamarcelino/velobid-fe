@@ -466,11 +466,24 @@ function CollectionCard({
           {timeLeft !== "Ended" && (
             <>
               <Input
-                type="number"
-                min={parseFloat(price.replace(" ETH", ""))}
+                type="text"
+                inputMode="decimal"
+                pattern="^\d*\.?\d*$"
                 placeholder="Enter your bid (ETH)"
                 value={bidAmount}
-                onChange={(e) => setBidAmount(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow only digits and a single decimal point
+                  if (/^\d*\.?\d*$/.test(value)) {
+                    setBidAmount(value);
+                  }
+                }}
+                onPaste={(e) => {
+                  const pasted = e.clipboardData.getData("text");
+                  if (!/^\d*\.?\d*$/.test(pasted)) {
+                    e.preventDefault();
+                  }
+                }}
               />
 
               <Button variant="bordered" className="w-full" onPress={placeBid}>
