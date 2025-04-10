@@ -72,7 +72,6 @@ export default function Dashboard() {
       if (!user.registered) {
         await contract.registerUser();
       }
-      console.log('aaaa')
     };
 
     checkUser();
@@ -103,8 +102,6 @@ export default function Dashboard() {
         averageBidValue: result.averageBidValue.toString(),
         totalUsers: result.totalUsers.toString(),
       };
-
-      console.log(platformStats)
 
       setOverview({
         activeAuctions: Number(platformStats.totalActiveAuction),
@@ -174,14 +171,10 @@ export default function Dashboard() {
           return parseInt(b.auctionEndTime) - parseInt(a.auctionEndTime)
         })
 
-        console.log(auctionDetails);
-
         setAuctions(auctionDetails)
       } catch (err) {
         console.error("Error fetching auctions:", err)
       }
-    } else {
-      console.log("No auctions yet.")
     }
   }
 

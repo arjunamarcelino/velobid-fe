@@ -10,6 +10,7 @@ import { Trophy } from "lucide-react"
 import { SearchIcon } from "@/components/icons";
 import { getContract } from "@/contract/contract"
 import React from "react"
+import { formatEther } from "ethers"
 
 export default function LeaderboardPage() {
   const [tabs, setTabs] = useState("topBidders")
@@ -27,19 +28,16 @@ export default function LeaderboardPage() {
         const contract = await getContract()
         const count = await contract.userCount()
         if (Number(count) === 0) {
-          console.log("No users yet.")
           return
         }
 
         const [addresses, bidCounts, spends] = await contract.getAllUsersStats()
 
-        console.log(addresses, bidCounts, spends)
-
         const users = addresses.map((addr: string, i: number) => ({
           address: addr,
           name: `${addr.slice(0, 6)}...${addr.slice(-4)}`,
-          totalBids: bidCounts[i]?.toNumber?.() ?? 0,
-          totalSpends: spends[i]?.toNumber?.() ?? 0,
+          totalBids: Number(bidCounts[i] ?? BigInt(0)),
+          totalSpends: Number(spends[i] ?? BigInt(0)),
         }))
 
         const topBidders = users
@@ -58,27 +56,6 @@ export default function LeaderboardPage() {
         setOtherPlayersSpend(topSpenders.slice(3))
       } catch (error) {
         console.error("Failed to fetch leaderboard data:", error)
-
-        // Dummy data fallback
-        const dummyUsers = Array.from({ length: 10 }, (_, i) => ({
-          address: `0xdummyUser${i}`,
-          name: `User${i}`,
-          totalBids: Math.floor(Math.random() * 100),
-          totalSpends: Math.floor(Math.random() * 1000),
-        }))
-
-        const topBidders = dummyUsers
-          .sort((a, b) => b.totalBids - a.totalBids)
-          .slice(0, 20)
-
-        const topSpenders = dummyUsers
-          .sort((a, b) => b.totalSpends - a.totalSpends)
-          .slice(0, 20)
-
-        setTopPlayersBid(topBidders.slice(0, 3))
-        setTopPlayersSpend(topSpenders.slice(0, 3))
-        setOtherPlayersBid(topBidders.slice(3))
-        setOtherPlayersSpend(topSpenders.slice(3))
       } finally {
         setLoading(false)
       }
@@ -86,7 +63,6 @@ export default function LeaderboardPage() {
 
     fetchData()
   }, [])
-
 
 
 
@@ -207,7 +183,7 @@ export default function LeaderboardPage() {
                       {tabs === 'topBidders' ? 'Total Bids' : 'Total Spends'}
                     </div>
                     <div className="font-medium mt-1">
-                      {tabs === 'topBidders' ? player.totalBids : player.totalSpends}
+                      {tabs === 'topBidders' ? player.totalBids : (formatEther(player.totalSpends) + ' ETH')}
                     </div>
                   </div>
                 </div>
@@ -252,7 +228,7 @@ export default function LeaderboardPage() {
                       </div>
                     </td>
                     <td className="py-3 text-center text-sm">
-                      {tabs === 'topBidders' ? player.totalBids : player.totalSpends}
+                      {tabs === 'topBidders' ? player.totalBids : (formatEther(player.totalSpends) + ' ETH')}
                     </td>
                   </motion.tr>
                 ))}

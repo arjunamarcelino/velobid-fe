@@ -122,11 +122,6 @@ export default function CreateAuctionModal({ trigger }: CreateAuctionModalProps)
                 const durationInSeconds = parseInt(duration) * 60;
                 const startingBidWei = parseEther(startingBid);
 
-                console.log(name,
-                  description,
-                  durationInSeconds,
-                  startingBidWei)
-
                 const tx = await contract.createAuction(
                   name,
                   description,
