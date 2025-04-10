@@ -25,45 +25,23 @@ export default function LeaderboardPage() {
 
       try {
         const contract = await getContract()
-        const addresses: string[] = await contract.getUsers(0, 20)
+        const [addresses, bidCounts, spends] = await contract.getAllUsersStats()
 
-        const biddersData = await Promise.all(
-          addresses.map(async (addr) => {
-            try {
-              const bidCount = await contract.topBidders(addr)
-              const spend = await contract.topSpenders(addr)
+        const users = addresses.map((addr: string, i: number) => ({
+          address: addr,
+          name: `${addr.slice(0, 6)}...${addr.slice(-4)}`,
+          totalBids: bidCounts[i]?.toNumber?.() ?? 0,
+          totalSpends: spends[i]?.toNumber?.() ?? 0,
+        }))
 
-              const totalBids = bidCount?.toNumber?.() ?? 0
-              const totalSpends = spend?.toNumber?.() ?? 0
-
-              return {
-                address: addr,
-                name: `${addr.slice(0, 6)}...${addr.slice(-4)}`,
-                totalBids,
-                totalSpends,
-              }
-            } catch (err) {
-              console.warn(`Skipping user ${addr} due to error:`, err)
-              return null
-            }
-          })
-        )
-
-        const validData = biddersData.filter(Boolean) as {
-          address: string
-          name: string
-          totalBids: number
-          totalSpends: number
-        }[]
-
-        const topBidders = validData
-          .filter((d) => d.totalBids > 0)
-          .sort((a, b) => b.totalBids - a.totalBids)
+        const topBidders = users
+          .filter((u: any) => u.totalBids > 0)
+          .sort((a: any, b: any) => b.totalBids - a.totalBids)
           .slice(0, 20)
 
-        const topSpenders = validData
-          .filter((d) => d.totalSpends > 0)
-          .sort((a, b) => b.totalSpends - a.totalSpends)
+        const topSpenders = users
+          .filter((u: any) => u.totalSpends > 0)
+          .sort((a: any, b: any) => b.totalSpends - a.totalSpends)
           .slice(0, 20)
 
         setTopPlayersBid(topBidders.slice(0, 3))
@@ -79,6 +57,7 @@ export default function LeaderboardPage() {
 
     fetchData()
   }, [])
+
 
 
   const container = {
