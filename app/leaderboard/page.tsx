@@ -196,7 +196,7 @@ export default function LeaderboardPage() {
         <div className="px-6 py-6 flex-1 overflow-auto">
           {(tabs === 'topBidders' ? otherPlayersBid : otherPlayersSpend).length === 0 ? (
             <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-              No data available.
+              {/* No data available. */}
             </div>
           ) : (
             <table className="w-full border-collapse">
