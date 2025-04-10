@@ -25,7 +25,15 @@ export default function LeaderboardPage() {
 
       try {
         const contract = await getContract()
+        const count = await contract.userCount()
+        if (Number(count) === 0) {
+          console.log("No users yet.")
+          return
+        }
+
         const [addresses, bidCounts, spends] = await contract.getAllUsersStats()
+
+        console.log(addresses, bidCounts, spends)
 
         const users = addresses.map((addr: string, i: number) => ({
           address: addr,
@@ -50,6 +58,27 @@ export default function LeaderboardPage() {
         setOtherPlayersSpend(topSpenders.slice(3))
       } catch (error) {
         console.error("Failed to fetch leaderboard data:", error)
+
+        // Dummy data fallback
+        const dummyUsers = Array.from({ length: 10 }, (_, i) => ({
+          address: `0xdummyUser${i}`,
+          name: `User${i}`,
+          totalBids: Math.floor(Math.random() * 100),
+          totalSpends: Math.floor(Math.random() * 1000),
+        }))
+
+        const topBidders = dummyUsers
+          .sort((a, b) => b.totalBids - a.totalBids)
+          .slice(0, 20)
+
+        const topSpenders = dummyUsers
+          .sort((a, b) => b.totalSpends - a.totalSpends)
+          .slice(0, 20)
+
+        setTopPlayersBid(topBidders.slice(0, 3))
+        setTopPlayersSpend(topSpenders.slice(0, 3))
+        setOtherPlayersBid(topBidders.slice(3))
+        setOtherPlayersSpend(topSpenders.slice(3))
       } finally {
         setLoading(false)
       }
@@ -57,6 +86,7 @@ export default function LeaderboardPage() {
 
     fetchData()
   }, [])
+
 
 
 
